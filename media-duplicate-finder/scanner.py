@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from media_info import MediaInfo, get_info, is_media_file
+from tmdb import TMDBClient, TMDBResult
 
 
 # ---------------------------------------------------------------------------
@@ -79,12 +80,14 @@ class Scanner:
         perceptual_hash_max_distance: int = 8,
         compute_full_hash: bool = True,
         on_progress: Optional[Callable[[str, int, int], None]] = None,
+        tmdb_client: Optional[TMDBClient] = None,
     ) -> None:
         self.name_threshold = name_similarity_threshold
         self.phash_max_dist = perceptual_hash_max_distance
         self.compute_full_hash = compute_full_hash
         # Callback: (message, current_step, total_steps)
         self._on_progress = on_progress
+        self._tmdb = tmdb_client
         self._cancelled = False
 
     # -- cancellation -------------------------------------------------------
@@ -169,8 +172,40 @@ class Scanner:
 
         # Filter out groups that ended up with <2 valid infos
         result = [g for g in result if len(g.items) >= 2]
+
+        # 5. Enrich with TMDB metadata (posters, titles)
+        if self._tmdb and self._tmdb.is_configured and result:
+            self._enrich_tmdb(result)
+
         self._progress("Scan complete.", len(result), len(result))
         return result
+
+    # -- TMDB enrichment ----------------------------------------------------
+    def _enrich_tmdb(self, groups: List[DuplicateGroup]) -> None:
+        """Look up each video/audio file on TMDB and populate tmdb_* fields."""
+        assert self._tmdb is not None
+        # Collect unique filenames to avoid duplicate API calls
+        seen_filenames: Dict[str, Optional[TMDBResult]] = {}
+        all_items = [mi for g in groups for mi in g.items
+                     if mi.media_type in ("video", "audio")]
+        total = len(all_items)
+        for i, mi in enumerate(all_items):
+            if self._cancelled:
+                return
+            self._progress(f"TMDB lookup ({i+1}/{total}): {mi.filename}", i + 1, total)
+            if mi.filename in seen_filenames:
+                result = seen_filenames[mi.filename]
+            else:
+                result = self._tmdb.lookup(mi.filename)
+                seen_filenames[mi.filename] = result
+            if result:
+                mi.tmdb_title = result.title
+                mi.tmdb_year = result.year
+                mi.tmdb_type = result.media_type
+                mi.tmdb_poster_path = result.poster_path
+                mi.tmdb_overview = result.overview
+                mi.tmdb_rating = result.vote_average
+                mi.tmdb_id = result.tmdb_id
 
     # -- discovery ----------------------------------------------------------
     def _discover(self, folders: List[str]) -> List[str]:

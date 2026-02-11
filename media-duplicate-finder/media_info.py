@@ -87,6 +87,14 @@ class MediaInfo:
     # Perceptual hash for images (hex string) – populated when Pillow is
     # available and the file is an image.
     perceptual_hash: str = ""
+    # TMDB metadata (populated separately by tmdb.TMDBClient)
+    tmdb_title: str = ""
+    tmdb_year: str = ""
+    tmdb_type: str = ""            # "movie" or "tv"
+    tmdb_poster_path: str = ""     # TMDB relative poster path
+    tmdb_overview: str = ""
+    tmdb_rating: float = 0.0
+    tmdb_id: int = 0
 
 
 # ---------------------------------------------------------------------------

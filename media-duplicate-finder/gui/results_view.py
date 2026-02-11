@@ -18,16 +18,25 @@ from typing import Dict, List
 from scanner import DuplicateGroup
 from media_info import MediaInfo
 from gui.details_dialog import DetailsDialog
+from tmdb import TMDBClient
 
 
 class ResultsView(ttk.Frame):
     """Scrollable view of all duplicate groups with checkboxes."""
 
-    def __init__(self, parent: tk.Widget, groups: List[DuplicateGroup]) -> None:
+    def __init__(
+        self,
+        parent: tk.Widget,
+        groups: List[DuplicateGroup],
+        tmdb_client: TMDBClient | None = None,
+    ) -> None:
         super().__init__(parent)
         self._groups = groups
+        self._tmdb = tmdb_client
         # path → BooleanVar for each checkbox
         self._check_vars: Dict[str, tk.BooleanVar] = {}
+        # Keep references to poster images so they don't get GC'd
+        self._poster_refs: List = []
         self._build_ui()
 
     # ------------------------------------------------------------------
@@ -96,16 +105,62 @@ class ResultsView(ttk.Frame):
             )
             gf.pack(fill=tk.X, padx=4, pady=4)
 
-            # "Details" button for the group
-            header = ttk.Frame(gf)
+            # Group content: poster on the left, file list on the right
+            group_body = ttk.Frame(gf)
+            group_body.pack(fill=tk.X)
+
+            # Try to show a poster thumbnail from the first item with TMDB data
+            tmdb_item = next((mi for mi in group.items if mi.tmdb_poster_path), None)
+            if tmdb_item and self._tmdb and self._tmdb.is_configured:
+                poster_frame = ttk.Frame(group_body)
+                poster_frame.pack(side=tk.LEFT, padx=(0, 8), anchor=tk.N)
+                self._add_poster_thumb(poster_frame, tmdb_item)
+
+            # Right side: header + file rows
+            right_frame = ttk.Frame(group_body)
+            right_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+            # Header row with TMDB info + Details button
+            header = ttk.Frame(right_frame)
             header.pack(fill=tk.X, pady=(0, 4))
+
+            if tmdb_item and tmdb_item.tmdb_title:
+                kind = "TV" if tmdb_item.tmdb_type == "tv" else "Movie"
+                tmdb_text = f"{tmdb_item.tmdb_title}"
+                if tmdb_item.tmdb_year:
+                    tmdb_text += f" ({tmdb_item.tmdb_year})"
+                tmdb_text += f"  [{kind}]"
+                if tmdb_item.tmdb_rating:
+                    tmdb_text += f"  TMDB: {tmdb_item.tmdb_rating:.1f}/10"
+                ttk.Label(header, text=tmdb_text,
+                          font=("", 9, "bold")).pack(side=tk.LEFT)
+
             ttk.Button(
                 header, text="Compare Details…",
                 command=lambda g=group: self._show_details(g),
             ).pack(side=tk.RIGHT)
 
             for item in group.items:
-                self._add_item_row(gf, item)
+                self._add_item_row(right_frame, item)
+
+    def _add_poster_thumb(self, parent: tk.Widget, mi: MediaInfo) -> None:
+        """Load and display a small poster thumbnail from TMDB."""
+        if not self._tmdb or not mi.tmdb_poster_path:
+            return
+        from tmdb import TMDBResult
+        result = TMDBResult(
+            tmdb_id=mi.tmdb_id,
+            poster_path=mi.tmdb_poster_path,
+            title=mi.tmdb_title,
+        )
+        photo = self._tmdb.get_poster_tk_image(result, size="thumb")
+        if photo:
+            lbl = ttk.Label(parent, image=photo)
+            lbl.pack()
+            self._poster_refs.append(photo)  # prevent GC
+        else:
+            ttk.Label(parent, text="[No poster]",
+                      foreground="gray").pack()
 
     def _add_item_row(self, parent: tk.Widget, mi: MediaInfo) -> None:
         row = ttk.Frame(parent)
@@ -224,7 +279,7 @@ class ResultsView(ttk.Frame):
             "Done", f"Moved {len(paths) - len(errors)} file(s) to {dest}.")
 
     def _show_details(self, group: DuplicateGroup) -> None:
-        DetailsDialog(self, group)
+        DetailsDialog(self, group, tmdb_client=self._tmdb)
 
     # ------------------------------------------------------------------
     # Canvas scrolling helpers

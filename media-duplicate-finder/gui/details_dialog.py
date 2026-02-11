@@ -25,6 +25,7 @@ from typing import Any, Callable, List, Optional
 
 from scanner import DuplicateGroup
 from media_info import MediaInfo
+from tmdb import TMDBClient, TMDBResult
 
 
 _HIGHLIGHT = "#d4edda"   # light green
@@ -34,15 +35,23 @@ _HEADER_BG = "#e9ecef"   # light gray
 class DetailsDialog(tk.Toplevel):
     """Modal-ish dialog comparing all items in *group*."""
 
-    def __init__(self, parent: tk.Widget, group: DuplicateGroup) -> None:
+    def __init__(
+        self,
+        parent: tk.Widget,
+        group: DuplicateGroup,
+        tmdb_client: Optional["TMDBClient"] = None,
+    ) -> None:
         super().__init__(parent)
         self.title(f"Details  –  Group {group.group_id + 1}")
-        self.geometry("1050x620")
+        self.geometry("1050x700")
         self.minsize(700, 400)
         self.transient(parent)
         self.grab_set()
 
         self._group = group
+        self._tmdb = tmdb_client
+        # Keep refs to poster images to prevent GC
+        self._poster_refs: list = []
         self._build_ui()
 
     # ------------------------------------------------------------------
@@ -86,11 +95,21 @@ class DetailsDialog(tk.Toplevel):
     def _populate(self) -> None:
         items = self._group.items
         ncols = len(items)
+        current_row = 0
 
         # ---- Header row (filenames) -----------------------------------
-        self._header_cell(0, 0, "Property")
+        self._header_cell(current_row, 0, "Property")
         for c, mi in enumerate(items):
-            self._header_cell(0, c + 1, mi.filename)
+            self._header_cell(current_row, c + 1, mi.filename)
+        current_row += 1
+
+        # ---- Poster row (images displayed in cells) -------------------
+        has_posters = any(mi.tmdb_poster_path for mi in items)
+        if has_posters and self._tmdb and self._tmdb.is_configured:
+            self._label_cell(current_row, 0, "Poster")
+            for c, mi in enumerate(items):
+                self._poster_cell(current_row, c + 1, mi)
+            current_row += 1
 
         # ---- Data rows ------------------------------------------------
         rows: List[_Row] = [
@@ -110,6 +129,15 @@ class DetailsDialog(tk.Toplevel):
             _Row("Overall bitrate", lambda m: m.bit_rate_label,
                  best=lambda vals: _idx_of_max(
                      vals, key=lambda m: m.bit_rate or 0)),
+            # TMDB metadata
+            _Row("TMDB title", lambda m: m.tmdb_title or ""),
+            _Row("TMDB year", lambda m: m.tmdb_year or ""),
+            _Row("TMDB type", lambda m: (
+                "TV Show" if m.tmdb_type == "tv"
+                else "Movie" if m.tmdb_type == "movie"
+                else "")),
+            _Row("TMDB rating", lambda m: (
+                f"{m.tmdb_rating:.1f}/10" if m.tmdb_rating else "")),
         ]
 
         # Stream rows (video)
@@ -145,8 +173,8 @@ class DetailsDialog(tk.Toplevel):
             _Row("Perceptual hash", lambda m: m.perceptual_hash or ""),
         ]
 
-        for r, row_def in enumerate(rows, start=1):
-            self._label_cell(r, 0, row_def.label)
+        for row_def in rows:
+            self._label_cell(current_row, 0, row_def.label)
             best_idx = None
             if row_def.best:
                 try:
@@ -160,7 +188,8 @@ class DetailsDialog(tk.Toplevel):
                 except Exception:
                     val = ""
                 bg = _HIGHLIGHT if (best_idx is not None and c == best_idx) else ""
-                self._data_cell(r, c + 1, val, bg=bg)
+                self._data_cell(current_row, c + 1, val, bg=bg)
+            current_row += 1
 
     # ------------------------------------------------------------------
     # Cell helpers
@@ -175,6 +204,26 @@ class DetailsDialog(tk.Toplevel):
         lbl = tk.Label(self._table, text=text, font=("", 9, "bold"),
                        anchor=tk.W, padx=6, pady=2,
                        borderwidth=1, relief=tk.GROOVE)
+        lbl.grid(row=r, column=c, sticky="nsew")
+
+    def _poster_cell(self, r: int, c: int, mi: MediaInfo) -> None:
+        """Display a poster thumbnail in a table cell."""
+        if mi.tmdb_poster_path and self._tmdb:
+            result = TMDBResult(
+                tmdb_id=mi.tmdb_id,
+                poster_path=mi.tmdb_poster_path,
+                title=mi.tmdb_title,
+            )
+            photo = self._tmdb.get_poster_tk_image(result, size="detail")
+            if photo:
+                lbl = tk.Label(self._table, image=photo,
+                               borderwidth=1, relief=tk.GROOVE)
+                lbl.grid(row=r, column=c, sticky="nsew", padx=1, pady=1)
+                self._poster_refs.append(photo)
+                return
+        # Fallback: empty cell
+        lbl = tk.Label(self._table, text="—", anchor=tk.CENTER,
+                       borderwidth=1, relief=tk.GROOVE, font=("", 9))
         lbl.grid(row=r, column=c, sticky="nsew")
 
     def _data_cell(self, r: int, c: int, text: str, bg: str = "") -> None:

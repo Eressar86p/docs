@@ -19,6 +19,11 @@ from typing import List, Optional
 
 from scanner import DuplicateGroup, Scanner
 from gui.results_view import ResultsView
+from tmdb import TMDBClient
+
+# Path to persist the API key between sessions
+_SETTINGS_DIR = os.path.join(os.path.expanduser("~"), ".config", "media-dup-finder")
+_API_KEY_FILE = os.path.join(_SETTINGS_DIR, "tmdb_api_key")
 
 
 class App(tk.Tk):
@@ -33,8 +38,10 @@ class App(tk.Tk):
         self._scanner: Optional[Scanner] = None
         self._scan_thread: Optional[threading.Thread] = None
         self._results: List[DuplicateGroup] = []
+        self._tmdb = TMDBClient()
 
         self._build_ui()
+        self._load_api_key()
 
     # ------------------------------------------------------------------
     # UI construction
@@ -90,6 +97,37 @@ class App(tk.Tk):
             variable=self._fullhash_var,
         ).grid(row=0, column=2, sticky=tk.W)
 
+        # --- TMDB frame --------------------------------------------------
+        tmdb_frame = ttk.LabelFrame(self, text="TMDB Integration (posters for movies & TV)", padding=8)
+        tmdb_frame.pack(fill=tk.X, padx=10, pady=4)
+
+        ttk.Label(tmdb_frame, text="API Key (v3):").pack(side=tk.LEFT)
+        self._api_key_var = tk.StringVar()
+        self._api_key_entry = ttk.Entry(
+            tmdb_frame, textvariable=self._api_key_var, width=40, show="*",
+        )
+        self._api_key_entry.pack(side=tk.LEFT, padx=(4, 4))
+
+        self._show_key_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(
+            tmdb_frame, text="Show",
+            variable=self._show_key_var,
+            command=self._toggle_key_visibility,
+        ).pack(side=tk.LEFT, padx=(0, 8))
+
+        ttk.Button(tmdb_frame, text="Save Key",
+                   command=self._save_api_key).pack(side=tk.LEFT, padx=(0, 4))
+
+        self._tmdb_status = tk.StringVar(value="")
+        ttk.Label(tmdb_frame, textvariable=self._tmdb_status,
+                  foreground="gray").pack(side=tk.LEFT, padx=(8, 0))
+
+        ttk.Label(
+            tmdb_frame,
+            text="Free key from themoviedb.org/settings/api",
+            foreground="blue", cursor="hand2",
+        ).pack(side=tk.RIGHT)
+
         # --- Scan button & progress ------------------------------------
         action_frame = ttk.Frame(self, padding=(10, 4))
         action_frame.pack(fill=tk.X)
@@ -133,6 +171,39 @@ class App(tk.Tk):
             self._folder_listbox.delete(idx)
 
     # ------------------------------------------------------------------
+    # TMDB API key management
+    # ------------------------------------------------------------------
+    def _load_api_key(self) -> None:
+        try:
+            with open(_API_KEY_FILE) as f:
+                key = f.read().strip()
+            if key:
+                self._api_key_var.set(key)
+                self._tmdb.api_key = key
+                self._tmdb_status.set("Key loaded.")
+        except FileNotFoundError:
+            self._tmdb_status.set("No key saved. Posters disabled.")
+        except Exception:
+            pass
+
+    def _save_api_key(self) -> None:
+        key = self._api_key_var.get().strip()
+        self._tmdb.api_key = key
+        try:
+            os.makedirs(_SETTINGS_DIR, exist_ok=True)
+            with open(_API_KEY_FILE, "w") as f:
+                f.write(key)
+            os.chmod(_API_KEY_FILE, 0o600)
+            self._tmdb_status.set("Key saved." if key else "Key cleared.")
+        except Exception as e:
+            self._tmdb_status.set(f"Save failed: {e}")
+
+    def _toggle_key_visibility(self) -> None:
+        self._api_key_entry.config(
+            show="" if self._show_key_var.get() else "*"
+        )
+
+    # ------------------------------------------------------------------
     # Scanning
     # ------------------------------------------------------------------
     def _start_scan(self) -> None:
@@ -155,10 +226,14 @@ class App(tk.Tk):
             self._results_view.destroy()
             self._results_view = None
 
+        # Update TMDB key from the entry field in case user typed without saving
+        self._tmdb.api_key = self._api_key_var.get().strip()
+
         self._scanner = Scanner(
             name_similarity_threshold=self._threshold_var.get(),
             compute_full_hash=self._fullhash_var.get(),
             on_progress=self._on_scan_progress,
+            tmdb_client=self._tmdb if self._tmdb.is_configured else None,
         )
 
         self._scan_thread = threading.Thread(
@@ -203,5 +278,8 @@ class App(tk.Tk):
             f"({sum(len(g.items) for g in results)} files total)."
         )
 
-        self._results_view = ResultsView(self._results_frame, results)
+        self._results_view = ResultsView(
+            self._results_frame, results,
+            tmdb_client=self._tmdb if self._tmdb.is_configured else None,
+        )
         self._results_view.pack(fill=tk.BOTH, expand=True)
