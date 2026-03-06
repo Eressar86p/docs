@@ -24,3 +24,7 @@ apscheduler>=3.10.4
 
 # Database client
 aiosqlite>=0.20.0
+
+# UI
+streamlit>=1.35.0
+plotly>=5.22.0
