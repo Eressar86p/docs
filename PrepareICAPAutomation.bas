@@ -178,6 +178,7 @@ Sub PrepareICAPAutomation()
     columnMapping.Add "JDE_ContractID", "JDE Contract ID"
     columnMapping.Add "Reason_for_Approval", "Reason For Approval"
     columnMapping.Add "Agile_Status", "Status"
+    columnMapping.Add "Previous_Agile", "PREVIOUS_AGILE_PLACEHOLDER"
     columnMapping.Add "Validation", "VALIDATION_PLACEHOLDER"
     columnMapping.Add "Gross_Revenue", "Gross revenue"
     columnMapping.Add "CAPEX", "CAPEX"
@@ -200,7 +201,7 @@ Sub PrepareICAPAutomation()
     ' === Create Headers in Order ===
     Dim outputHeaders As Variant
     outputHeaders = Array("ICAP_ID", "ICAP_Date", "InternalStatus", "Opportunity_number", _
-                         "JDE_ContractID", "Reason_for_Approval", "Agile_Status", "Validation", _
+                         "JDE_ContractID", "Reason_for_Approval", "Agile_Status", "Previous_Agile", "Validation", _
                          "Gross_Revenue", "CAPEX", "PRIMO", "PSD", "DAF", "Automation", _
                          "Duration", "Country", "Start_Date", "DL_status", "Comments", _
                          "Sector", "Index", "Requester", "Customer", "Region", "ICAP_Type")
@@ -344,6 +345,13 @@ Sub PrepareICAPAutomation()
                         End If
                     Case "INTERNAL_STATUS_PLACEHOLDER"
                         targetSheet.Cells(targetRow, colIndex + 1).Value = gsdStatusVal
+                    Case "PREVIOUS_AGILE_PLACEHOLDER"
+                        If statusVal = "Update" Then
+                            icapID = Trim(r.Range.Cells(1, icapIDCol).Value)
+                            If dictDLStatus.Exists(icapID) Then
+                                targetSheet.Cells(targetRow, colIndex + 1).Value = dictDLStatus(icapID)
+                            End If
+                        End If
                     Case "VALIDATION_PLACEHOLDER"
                         targetSheet.Cells(targetRow, colIndex + 1).Value = validationVal
                     Case "PRIMO_PLACEHOLDER"
