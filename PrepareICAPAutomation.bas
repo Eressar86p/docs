@@ -178,7 +178,7 @@ Sub PrepareICAPAutomation()
     columnMapping.Add "JDE_ContractID", "JDE Contract ID"
     columnMapping.Add "Reason_for_Approval", "Reason For Approval"
     columnMapping.Add "Agile_Status", "Status"
-    columnMapping.Add "Previous_Agile", "PREVIOUS_AGILE_PLACEHOLDER"
+    columnMapping.Add "Previous_Agile", "DL_ICAP.Agile_Status"
     columnMapping.Add "Validation", "VALIDATION_PLACEHOLDER"
     columnMapping.Add "Gross_Revenue", "Gross revenue"
     columnMapping.Add "CAPEX", "CAPEX"
@@ -345,7 +345,7 @@ Sub PrepareICAPAutomation()
                         End If
                     Case "INTERNAL_STATUS_PLACEHOLDER"
                         targetSheet.Cells(targetRow, colIndex + 1).Value = gsdStatusVal
-                    Case "PREVIOUS_AGILE_PLACEHOLDER"
+                    Case "DL_ICAP.Agile_Status"
                         If statusVal = "Update" Then
                             icapID = Trim(r.Range.Cells(1, icapIDCol).Value)
                             If dictDLStatus.Exists(icapID) Then
