@@ -149,6 +149,25 @@ because bad master data quietly corrupts every downstream report and document.
   auto-apply, low-confidence → human; keep an audit trail; learn from human overrides.
 - **Difficulty:** Low–Medium (format), Medium (entity resolution against master data).
 
+**Architecture — AI as router, deterministic code as hands.** The LLM's job is to
+*decide and interpret*, not to do the validation; truth comes from tools/data, never the
+model's memory.
+
+- **Tools the agent calls:** `validate_format(field, value)` (regex per contract, pure
+  Python); `lookup_master(entity_type, query)` (fuzzy-search master list → candidates +
+  scores); `resolve_entity(...)` (AI picks the best candidate or escalates).
+- **Route by field type:** structured fields (IDs/codes) → **rules-first** (regex before
+  the LLM ever sees them); freeform fields (customer/brand/site names) → **AI-first**
+  (parse, then `lookup_master`). "Rules on the residue" — cheap deterministic checks clear
+  the ~80% that's just format; the LLM only reasons over the ambiguous ~20%.
+- **Grounded resolution:** for "Nike SA Turkey bla bla", the AI parses → proposes a query →
+  gets real candidates from `lookup_master` → picks or flags. It reasons; the data decides.
+  Disambiguation ("SA" = country vs. legal form; brand vs. contract owner) is the genuine
+  "thinking" part, and it must choose from returned candidates, not from memory.
+- **Stack:** function/tool calling — Azure OpenAI or AI Builder as router; Python
+  validators/lookups exposed as Azure Functions or Power Automate steps; Power App submits
+  and either gets a clean record back or routes it to a review queue.
+
 ## Design principle: build for the non-designer maker
 
 Several of these tools are operated by site managers / BPEs, not specialists. That flips
