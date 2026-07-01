@@ -1,0 +1,205 @@
+---
+title: 'Logistics Administration: Recurring Documentation & Reporting Tasks'
+description: 'High-level research on the most recurring administrative tasks in logistics, focused on documentation and reporting responsibilities.'
+---
+
+## Overview
+
+Logistics administration is the operational backbone that keeps goods, information,
+and money moving in sync across a supply chain. A large share of the role is
+**documentation** (creating, verifying, and filing records) and **reporting**
+(aggregating those records into decisions and compliance evidence).
+
+This page catalogs the most **recurring** high-level tasks, grouped by function,
+with the typical cadence at which each is performed. It is intended as a reference
+map — not a procedure manual — for anyone scoping a logistics admin role, designing
+templates, or planning automation.
+
+<Note>
+  "Recurring" here means the task repeats predictably — per shipment, per shift,
+  daily, weekly, monthly, or per audit cycle — rather than as a one-off project.
+</Note>
+
+## The core recurring tasks at a glance
+
+<CardGroup cols={2}>
+  <Card title="Order & shipment documentation" icon="file-lines">
+    Purchase orders, packing lists, bills of lading, delivery notes, proof of delivery.
+  </Card>
+  <Card title="Inventory & warehouse records" icon="boxes-stacked">
+    Stock counts, goods-in/goods-out logs, cycle counts, discrepancy reports.
+  </Card>
+  <Card title="Transport & carrier records" icon="truck">
+    Freight bookings, manifests, route sheets, driver/vehicle logs, ePOD.
+  </Card>
+  <Card title="Customs & compliance" icon="passport">
+    Commercial invoices, certificates of origin, customs declarations, dangerous-goods docs.
+  </Card>
+  <Card title="Financial & invoicing" icon="receipt">
+    Freight invoice reconciliation, cost coding, accruals, claims documentation.
+  </Card>
+  <Card title="Performance reporting" icon="chart-line">
+    KPI dashboards, OTIF, cost-per-shipment, exception and SLA reports.
+  </Card>
+</CardGroup>
+
+## 1. Order and shipment documentation
+
+The most frequent documentation work is tied to the lifecycle of an individual order
+or shipment. These are produced **per transaction**, so volume scales directly with
+throughput.
+
+| Task | Typical cadence | Purpose |
+| --- | --- | --- |
+| Raise / confirm purchase orders (POs) | Per order | Authorize and record procurement |
+| Generate packing lists | Per shipment | Itemize contents for handling and receipt |
+| Prepare bills of lading (BOL) / air waybills (AWB) | Per shipment | Legal contract of carriage + title document |
+| Issue delivery notes / dispatch notes | Per delivery | Record what left the facility |
+| Capture proof of delivery (POD / ePOD) | Per delivery | Evidence of receipt; unlocks invoicing |
+| Match PO ↔ shipment ↔ invoice (3-way match) | Per transaction | Prevent overpayment and fraud |
+
+**Documentation focus:** accuracy of quantities, SKUs, weights, and addresses;
+version control when orders change; and maintaining an auditable link between the PO,
+the physical movement, and the eventual invoice.
+
+## 2. Inventory and warehouse records
+
+Warehouse administration generates a steady stream of records that feed both
+operations and finance.
+
+- **Goods-in / receiving records** — logging deliveries against expected POs,
+  noting shortages, overages, and damages (SOD reports). *(Per inbound load)*
+- **Goods-out / dispatch records** — confirming picks, packs, and loads. *(Per outbound load)*
+- **Cycle counts and stock takes** — reconciling physical stock to system records.
+  *(Daily cycle counts; periodic/annual full counts)*
+- **Stock adjustment / discrepancy reports** — documenting and approving corrections.
+  *(As they occur, reviewed weekly/monthly)*
+- **Bin / location and putaway logs** — maintaining slotting accuracy. *(Continuous)*
+
+<Tip>
+  Inventory accuracy reporting (system stock vs. physical stock, expressed as a
+  percentage) is one of the most requested recurring reports because it directly
+  affects order promising, working capital, and audit outcomes.
+</Tip>
+
+## 3. Transport and carrier administration
+
+- **Freight booking and confirmation records** — capturing carrier, service level,
+  rate, and reference numbers. *(Per shipment)*
+- **Load manifests and route sheets** — what is on each vehicle and in what sequence.
+  *(Per departure / per route)*
+- **Driver, vehicle, and hours logs** — compliance with working-time and vehicle
+  inspection rules. *(Daily)*
+- **Carrier performance tracking** — on-time collection/delivery, damage rates,
+  failed deliveries. *(Weekly / monthly)*
+- **Track-and-trace and exception logging** — recording delays, reroutes, and
+  their causes. *(Continuous / daily)*
+
+## 4. Customs, trade, and regulatory compliance
+
+For any cross-border movement, compliance documentation is both recurring and
+high-risk (errors cause fines, seizures, and delays).
+
+| Document / task | When |
+| --- | --- |
+| Commercial invoice & packing list for customs | Per international shipment |
+| Customs declarations (import/export entries) | Per international shipment |
+| Certificates of origin / preferential trade docs | Per shipment (where applicable) |
+| HS/tariff code classification and validation | Per new product / per shipment |
+| Dangerous goods (DG/ADR/IMDG) documentation | Per hazardous shipment |
+| Licenses, permits, and restricted-party screening | Per applicable shipment |
+| Duty, tax, and tariff record-keeping | Ongoing; retained for audit |
+
+**Reporting focus:** maintaining a defensible audit trail, tracking declaration
+accuracy and error rates, and monitoring duty/VAT liabilities.
+
+## 5. Financial, invoicing, and cost administration
+
+- **Freight invoice receipt and audit** — checking carrier invoices against agreed
+  rates and booked services. *(Per invoice; batched weekly)*
+- **Freight cost reconciliation and coding** — allocating costs to the right
+  cost centers, customers, or jobs. *(Weekly / monthly)*
+- **Accruals and month-end close support** — estimating unbilled logistics costs.
+  *(Monthly)*
+- **Claims documentation** — damage, loss, and shortage claims against carriers or
+  insurers. *(As incidents occur)*
+- **Credit/debit note and dispute handling** — resolving billing discrepancies.
+  *(Ongoing)*
+
+## 6. Performance and management reporting
+
+Reporting is where documentation is turned into decisions. The recurring reports
+below are the ones most logistics admins own or contribute to.
+
+### Common recurring reports and their cadence
+
+| Report | Typical cadence | What it answers |
+| --- | --- | --- |
+| OTIF (On-Time In-Full) | Daily / weekly | Are we delivering completely and on time? |
+| Order cycle time / lead time | Weekly | How long from order to delivery? |
+| Inventory accuracy & stock levels | Daily / weekly | Do records match reality? Are we over/understocked? |
+| Cost per shipment / cost per unit | Monthly | What is it costing us to move goods? |
+| Carrier / supplier scorecards | Monthly | Which partners are reliable and cost-effective? |
+| Exception & incident report | Daily | What went wrong and why? |
+| Fill rate / backorder report | Weekly | How much demand did we satisfy? |
+| Damage / loss / claims summary | Monthly | Where are we losing product and money? |
+| Dock-to-stock & throughput | Weekly | How fast are we processing inbound/outbound? |
+| SLA / KPI compliance dashboard | Monthly | Are we meeting contractual commitments? |
+
+<Info>
+  Most of these consolidate into a **monthly logistics performance pack** for
+  management, plus a lighter **daily/weekly operational report** for the floor.
+  The underlying data comes almost entirely from the transactional documentation
+  in sections 1–5.
+</Info>
+
+### Frequently tracked KPIs
+
+- On-time delivery / OTIF
+- Order accuracy and fill rate
+- Inventory accuracy and turnover
+- Freight cost as a percentage of sales
+- Cost per order / per shipment / per unit
+- Damage and return rates
+- Warehouse throughput and productivity
+- Carrier and supplier on-time performance
+
+## 7. Records management and audit support
+
+Underlying everything is the discipline of keeping records findable and defensible.
+
+- **Document filing and archiving** — organizing PODs, customs docs, and invoices
+  for retrieval. *(Continuous)*
+- **Retention and retrieval** — meeting legal retention periods (often multiple
+  years) and pulling records on request. *(Ongoing / per audit)*
+- **Audit preparation** — assembling evidence for internal, customer, customs, or
+  financial audits. *(Per audit cycle)*
+- **Master data upkeep** — keeping product, address, carrier, and rate data clean,
+  since bad master data corrupts every downstream document and report. *(Ongoing)*
+
+## Cadence summary
+
+<CardGroup cols={2}>
+  <Card title="Per transaction" icon="arrows-rotate">
+    POs, packing lists, BOLs, delivery notes, PODs, customs docs, freight bookings.
+  </Card>
+  <Card title="Daily" icon="calendar-day">
+    Goods-in/out logs, cycle counts, exception logs, OTIF snapshot, driver logs.
+  </Card>
+  <Card title="Weekly" icon="calendar-week">
+    Inventory accuracy, fill rate, cost coding, carrier exception review.
+  </Card>
+  <Card title="Monthly" icon="calendar">
+    Performance pack, cost-per-shipment, scorecards, accruals, claims summary.
+  </Card>
+</CardGroup>
+
+## Where documentation and reporting connect
+
+The through-line across all of these tasks: **every report is only as good as the
+documentation feeding it.** A clean 3-way match, an accurate POD, and correct
+master data are what make an OTIF number or a cost-per-shipment figure trustworthy.
+When scoping templates or automation, prioritize the transactional documents in
+sections 1–5 first — they are the highest-volume, highest-recurrence, and
+highest-leverage work, and they are the source of every management report in
+section 6.
