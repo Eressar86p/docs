@@ -17,9 +17,9 @@ from one master**.
   Non-essential ≠ low-value — it means safe to defer, low blast radius, ideal for AI.
 </Note>
 
-## The three reusable engines
+## The reusable engines
 
-Almost every idea below reduces to one of three patterns. That convergence is a good
+Almost every idea below reduces to one of a few patterns. That convergence is a good
 sign: a small number of engines can power many tools.
 
 | Engine | Shape | Why it's AI-safe |
@@ -27,6 +27,7 @@ sign: a small number of engines can power many tools.
 | **Update engine** | old version + new data → new version | Prior artifact is the template; output is diffable; human approves in seconds |
 | **Variant engine (basic)** | one master → text / language / format variants | Structure is fixed; AI only swaps safe content |
 | **Variant engine (creative)** | one master → composited, restyled, personalized visuals | Promotional, not procedural; low blast radius; plays to generative strengths |
+| **Gatekeeper / normalization engine** | messy input + a data contract → clean, validated, canonical record | Deterministic rules for format; AI only for interpretation; escalates on low confidence |
 
 ## Idea catalog
 
@@ -123,6 +124,31 @@ Not report generation itself, but the housekeeping/insight layer around it.
 - **Note:** for exact-text/brand signage, **template + AI content-swap** beats pure image
   generation. Reserve generative image work for annotation and creative campaign assets.
 
+### 8. Data validation & cleansing gate (before OneData)
+
+Master data is supposed to follow clear contracts (contract IDs = 3 letters + 5 digits,
+site IDs = 3 letters + 3 digits, customer = brand vs. parent customer = contract owner),
+but BD people enter freeform mess like "nike SA Turkey bla bla." This tool validates and
+cleans records **before** they land in the OneData database. Highest-leverage idea,
+because bad master data quietly corrupts every downstream report and document.
+
+- **Engine:** Gatekeeper / normalization.
+- **It's a hybrid — split the problem:**
+  - **Format rules** (ID patterns) → deterministic regex/rules. 100% reliable, no AI.
+  - **Interpretation** (parse "nike SA Turkey" into fields) → AI.
+  - **Entity resolution** (customer/brand vs. parent/contract owner) → match against the
+    master list; AI disambiguates.
+- **The "data contract" document does double duty:** written once as structured rules
+  (field → format → good example → bad example → fix), it both **educates BD people** and
+  **is the ruleset the AI enforces.** One source of truth.
+- **Hard requirement:** the AI must **match against the real master list, never invent a
+  canonical entity.** Can't confidently match → flag for a human, don't guess.
+- **Placement:** primary = pre-submit validation (Power Apps form / OneData entry wrapper),
+  shift-left at the source; bonus = batch cleaner over existing OneData, ranked by confidence.
+- **Gotchas:** suggest with before→after + confidence, don't silently "fix"; high-confidence
+  auto-apply, low-confidence → human; keep an audit trail; learn from human overrides.
+- **Difficulty:** Low–Medium (format), Medium (entity resolution against master data).
+
 ## Design principle: build for the non-designer maker
 
 Several of these tools are operated by site managers / BPEs, not specialists. That flips
@@ -150,6 +176,7 @@ The natural home for most of these (keeps data in-tenant, respects governance):
 
 | Idea | Engine | Difficulty | Best first bet? |
 | --- | --- | --- | --- |
+| Data validation gate (before OneData) | Gatekeeper | Low–Med | ★ highest leverage (fixes root cause) |
 | Excel → document/deck/digest | Update | Low | ★ strong beachhead |
 | Work Instructions creator | Update | Low–Med | ★ high-pain, tractable |
 | Variance / anomaly commentary | Update | Low–Med | good add-on |
